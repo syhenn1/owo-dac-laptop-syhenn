@@ -262,38 +262,31 @@ export default function Home() {
   const fetchSidebarOptions = async () => {
     if (sheetData.length === 0) return;
     const item = sheetData[0]; // Use first item to scrape options
-    const currentSessionId = localStorage.getItem('dac_session');
+    const dsSession = localStorage.getItem('datasource_session');
+
+    // We need action_id to fetch the form
+    if (!item.action_id || !dsSession) {
+      console.warn("Missing action_id or session for fetching sidebar options");
+      return;
+    }
 
     try {
-      // We reuse the get-detail logic partly. 
-      // 1. Get extractedId
-      let targetId;
-      if (!targetId) {
-        const checkRes = await fetch('/api/check-approval', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            npsn: item.npsn,
-            nama_sekolah: item.nama_sekolah,
-            sn: item.serial_number,
-            session_id: currentSessionId
-          })
-        });
-        const checkJson = await checkRes.json();
-        targetId = checkJson.extractedId;
+      const res = await fetch('/api/get-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: item.action_id,
+          cookie: dsSession
+        })
+      });
+      const json = await res.json();
+
+      if (json.success && json.html) {
+        parseSidebarOptions(json.html);
+      } else {
+        console.error("Failed to fetch form HTML:", json.message);
       }
 
-      if (targetId) {
-        const detailRes = await fetch('/api/get-detail', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: targetId, session_id: currentSessionId })
-        });
-        const detailJson = await detailRes.json();
-        if (detailJson.html) {
-          parseSidebarOptions(detailJson.html);
-        }
-      }
     } catch (e) {
       console.error("Failed to fetch sidebar options", e);
     }
@@ -331,6 +324,7 @@ export default function Home() {
             opts.push(val);
           }
         });
+        console.log(opts)
       }
 
       // Fallback if no options found? Or maybe keep empty?

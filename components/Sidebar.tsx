@@ -12,75 +12,66 @@ export interface EvaluationField {
 // Static Error Map (Keep as is for now, or move to dynamic if error messages change)
 export const errorMap: Record<string, Record<string, string>> = {
     G: {
-        "Tidak Sesuai": "(5A) Geo Tagging tidak sesuai",
-        "Tidak Ada": "(5B) Geo Tagging tidak ada",
+        "Tidak sesuai": "(5A) Geo Tagging tidak sesuai",
+        "Tidak ada": "(5B) Geo Tagging tidak ada",
+        "Tidak terlihat jelas": "(5C) Geo Tagging tidak terlihat jelas",
     },
     H: {
-        "Tidak Sesuai": "(4A) Foto sekolah tidak sesuai",
-        "Tidak Ada": "(4B) Foto sekolah tidak ada",
-        "Tidak Terlihat Jelas": "(4E) Foto sekolah tidak terlihat jelas",
+        "Tidak sesuai": "(4A) Foto sekolah tidak sesuai",
+        "Tidak ada": "(4B) Foto sekolah tidak ada",
+        "Tidak terlihat jelas": "(4E) Foto sekolah tidak terlihat jelas",
     },
     I: {
-        "Tidak Sesuai": "(4C) Foto Box dan PIC tidak sesuai",
-        "Tidak Ada": "(4D) Foto Box dan PIC tidak ada",
+        "Tidak sesuai": "(4C) Foto Box dan PIC tidak sesuai",
+        "Tidak ada": "(4D) Foto Box dan PIC tidak ada",
     },
     J: {
-        "Tidak Sesuai": "(2B) Foto kelengkapan Laptop tidak sesuai",
-        "Tidak Ada": "(2A) Foto kelengkapan Laptop tidak ada",
+        "Tidak sesuai": "(2B) Foto kelengkapan Laptop tidak sesuai",
+        "Tidak ada": "(2A) Foto kelengkapan Laptop tidak ada",
     },
     K: {
-        "Tidak Sesuai": "(6A) DxDiag tidak sesuai",
-        "Tidak Ada": "(6B) DxDiag tidak ada",
+        "Tidak sesuai": "(6A) DxDiag tidak sesuai",
+        "Tidak ada": "(6B) DxDiag tidak ada",
         "Tidak terlihat jelas": "(6C) DxDiag tidak terlihat jelas",
     },
     O: {
-        "Tidak Sesuai":
-            "(1AI) Barcode SN pada BAPP tidak sesuai dengan data web DAC",
-        "Tidak Ada": "(1AF) Barcode SN pada BAPP tidak ada",
-        "Tidak Terlihat Jelas": "(1AG) Barcode SN pada BAPP tidak terlihat jelas",
+        "Tidak sesuai": "(1AI) Barcode SN pada BAPP tidak sesuai dengan data web DAC",
+        "Tidak ada": "(1AF) Barcode SN pada BAPP tidak ada",
+        "Tidak terlihat jelas": "(1AG) Barcode SN pada BAPP tidak terlihat jelas",
     },
     Q: {
-        "Tidak Lengkap": "(1D) Ceklis BAPP tidak lengkap pada halaman 1",
-        "Tidak Sesuai/Rusak/Tidak Ada":
-            "(1Q) Ceklis BAPP tidak sesuai/rusak/tidak ada pada halaman 1",
-        "BAPP Tidak Jelas": "(1L) BAPP Halaman 1 tidak terlihat jelas",
-        Diedit: "(1S) BAPP Hal 1 tidak boleh diedit digital",
-        "Tidak Ada": "(1W) BAPP Hal 1 tidak ada",
         "Ceklis tidak lengkap": "(1D) Ceklis BAPP tidak lengkap pada halaman 1",
+        "Tidak Sesuai/Rusak/Tidak Ada": "(1Q) Ceklis BAPP tidak sesuai/rusak/tidak ada pada halaman 1",
+        "Tidak terlihat jelas": "(1L) BAPP Halaman 1 tidak terlihat jelas",
+        "Diedit": "(1S) BAPP Hal 1 tidak boleh diedit digital",
+        "Tidak ada": "(1W) BAPP Hal 1 tidak ada",
         "Data tidak lengkap": "(1N) Data BAPP halaman 1 tidak lengkap",
         "Double ceklis": "(1I) Double ceklis pada halaman 1 BAPP",
-        "Data BAPP sekolah tidak sesuai":
-            "(1K) Data BAPP sekolah tidak sesuai (cek NPSN pada tabel pertama dan NPSN dengan foto sekolah atau NPSN yang diinput)",
+        "Data BAPP sekolah tidak sesuai": "(1K) Data BAPP sekolah tidak sesuai",
         "BAPP terpotong": "(1AL) BAPP Halaman 1 terpotong",
     },
     R: {
-        "Tidak Lengkap": "(1E) Ceklis BAPP tidak lengkap pada halaman 2",
+        "Ceklis tidak lengkap": "(1E) Ceklis BAPP tidak lengkap pada halaman 2",
         "Ceklis Belum Dapat Diterima": "(1Y) Ceklis Belum Dapat Diterima",
-        "BAPP Tidak Jelas": "(1M) BAPP Halaman 2 tidak terlihat jelas",
-        Diedit: "(1T) BAPP Hal 2 tidak boleh diedit digital",
-        "Tidak Ada": "(1X) BAPP Hal 2 tidak ada",
-        "Tanggal Tidak Ada": "(1F) Tanggal pada BAPP hal 2 tidak ada",
-        "Tanggal Tidak Konsisten": "(1Z) Tanggal pada BAPP hal 2 tidak konsisten",
-        "Tidak Ada Paraf": "(1B) Simpulan BAPP pada hal 2 belum diparaf",
-        "Ceklis Tidak Lengkap": "(1E) Ceklis BAPP tidak lengkap pada halaman 2",
-        "Double Ceklis": "(1AK) Double ceklis pada halaman 2 BAPP",
-        "Ceklis tidak sesuai/tidak ada":
-            "(1AJ) Ceklis BAPP hal 2, terdapat ceklis TIDAK SESUAI/TIDAK ADA",
+        "Tidak terlihat jelas": "(1M) BAPP Halaman 2 tidak terlihat jelas",
+        "Diedit": "(1T) BAPP Hal 2 tidak boleh diedit digital",
+        "Tidak ada": "(1X) BAPP Hal 2 tidak ada",
+        "Tanggal tidak ada": "(1F) Tanggal pada BAPP hal 2 tidak ada",
+        "Tanggal tidak konsisten": "(1Z) Tanggal pada BAPP hal 2 tidak konsisten",
+        "Tidak ada paraf": "(1B) Simpulan BAPP pada hal 2 belum diparaf",
+        "Double ceklis": "(1AK) Double ceklis pada halaman 2 BAPP",
+        "Ceklis tidak sesuai/rusak/tidak ada": "(1AJ) Ceklis BAPP hal 2, terdapat ceklis TIDAK SESUAI/TIDAK ADA",
         "BAPP terpotong": "(1AM) BAPP Halaman 2 terpotong",
     },
     S: {
-        "Tidak Konsisten":
-            "(1H) Data penanda tangan pada halaman 1 dan halaman 2 BAPP tidak konsisten",
-        "TTD Tidak Ada":
-            "(1G) Tidak ada tanda tangan dari pihak sekolah atau pihak kedua",
-        "Tidak ada nama terang pada bagian tanda tangan":
-            "(1AH) Tidak ada nama terang pada bagian tanda tangan",
+        "Tidak konsisten": "(1H) Data penanda tangan pada halaman 1 dan halaman 2 BAPP tidak konsisten",
+        "TTD tidak ada": "(1G) Tidak ada tanda tangan dari pihak sekolah atau pihak kedua",
+        "Tidak ada nama terang pada bagian tanda tangan": "(1AH) Tidak ada nama terang pada bagian tanda tangan",
     },
     T: {
-        "Tidak Sesuai":
-            "(1O) Stempel pada BAPP halaman 2 tidak sesuai dengan sekolahnya",
-        "Tidak Ada": "(1P) Stempel tidak ada",
-        "Tidak Terlihat": "(1AD) Stempel tidak terlihat",
+        "Tidak sesuai": "(1O) Stempel pada BAPP halaman 2 tidak sesuai dengan sekolahnya",
+        "Tidak ada": "(1P) Stempel tidak ada",
+        "Tidak terlihat jelas": "(1AD) Stempel tidak terlihat",
     },
 };
 
