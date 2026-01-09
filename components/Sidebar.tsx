@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Spinner from "./Spinner";
 
 export interface EvaluationField {
@@ -51,6 +51,7 @@ export const errorMap: Record<string, Record<string, string>> = {
     "Double ceklis": "(1I) Double ceklis pada halaman 1 BAPP",
     "Data BAPP sekolah tidak sesuai": "(1K) Data BAPP sekolah tidak sesuai",
     "BAPP terpotong": "(1AL) BAPP Halaman 1 terpotong",
+    "Pihak pertama bukan dari tenaga pendidik": "(1AN) Pihak pertama hanya boleh dari kepala sekolah/wakil kepala sekolah/guru/pengajar/operator sekolah"
   },
   R: {
     "Ceklis tidak lengkap": "(1E) Ceklis BAPP tidak lengkap pada halaman 2",
@@ -151,7 +152,33 @@ export default function Sidebar({
   customReason,
   setCustomReason,
   sidebarOptions,
-}: SidebarProps) {
+  currentImageIndex, // New Prop
+}: SidebarProps & { currentImageIndex: number | null }) {
+  // Define Mapping here or outside component
+  const IMAGE_FIELD_MAPPING: Record<number, string[]> = {
+    0: ["G", "H", "I"],
+    1: ["J"],
+    2: ["K"],
+    3: ["O", "Q"],
+    4: ["F", "R", "S", "T"],
+  };
+
+  const [filterMode, setFilterMode] = useState<"specific" | "all">("specific");
+
+  // Auto-set filter mode when image changes
+  useEffect(() => {
+    if (currentImageIndex !== null) {
+      // Only set specific if mapping exists for this index
+      if (IMAGE_FIELD_MAPPING[currentImageIndex]) {
+        setFilterMode("specific");
+      } else {
+        setFilterMode("all"); // Default to all if no mapping (e.g. image > 5)
+      }
+    } else {
+      setFilterMode("all");
+    }
+  }, [currentImageIndex]);
+
   // Auto-update reason when form changes
   useEffect(() => {
     const reasons: string[] = [];
@@ -182,11 +209,42 @@ export default function Sidebar({
     : "bg-red-600 hover:bg-red-500";
   const mainButtonAction = isFormDefault ? handleTerima : handleTolak;
 
+  // Filter Logic
+  const displayedOptions = sidebarOptions.filter((field) => {
+    if (currentImageIndex === null || filterMode === "all") return true;
+
+    const allowedFields = IMAGE_FIELD_MAPPING[currentImageIndex];
+    if (!allowedFields) return true; // Show all if no mapping found (extra images)
+
+    return allowedFields.includes(field.id);
+  });
+
   return (
     <aside className="w-96 bg-gray-800 text-white flex-shrink-0 flex flex-col p-4 h-full overflow-hidden border-r border-gray-700">
       <h1 className="text-xl font-bold border-b border-gray-700 pb-4 flex-shrink-0">
         FORM EVALUASI
       </h1>
+
+      {/* Mode Switcher when Image Open */}
+      {currentImageIndex !== null && (
+        <div className="flex bg-gray-700 rounded p-1 mt-2 mb-2">
+          <button
+            onClick={() => setFilterMode('specific')}
+            className={`flex-1 py-1 text-xs rounded font-bold transition-all ${filterMode === 'specific' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'
+              }`}
+          >
+            Filtered
+          </button>
+          <button
+            onClick={() => setFilterMode('all')}
+            className={`flex-1 py-1 text-xs rounded font-bold transition-all ${filterMode === 'all' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'
+              }`}
+          >
+            Default
+          </button>
+        </div>
+      )}
+
       <div className="flex-grow mt-4 overflow-y-auto pr-2 custom-scrollbar">
         {sidebarOptions.length === 0 ? (
           <div className="text-gray-400 text-sm text-center mt-10">
@@ -194,7 +252,7 @@ export default function Sidebar({
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {sidebarOptions.map((field) => (
+            {displayedOptions.map((field) => (
               <div key={field.id} className="text-left text-sm">
                 <label className="font-semibold text-gray-300 mb-2 block">
                   {field.label}

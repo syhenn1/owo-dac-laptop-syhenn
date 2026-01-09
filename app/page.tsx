@@ -752,6 +752,7 @@ export default function Home() {
           customReason={customReason}
           setCustomReason={setCustomReason}
           sidebarOptions={sidebarOptions}
+          currentImageIndex={currentImageIndex}
         />
       </div>
 
