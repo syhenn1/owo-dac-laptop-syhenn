@@ -57,21 +57,62 @@ export default function Home() {
   );
 
   useEffect(() => {
-    const dacSession = localStorage.getItem("dac_session");
-    const dsSession = localStorage.getItem("datasource_session");
-
-    // BACKWARD COMPATIBILITY
+    // Check localStorage for BACKWARD COMPATIBILITY
     const oldSession = localStorage.getItem("ci_session");
-    if (oldSession && !dacSession) {
+    if (oldSession && !localStorage.getItem("dac_session")) {
       localStorage.setItem("dac_session", oldSession);
       localStorage.removeItem("ci_session");
-      setDacAuthenticated(true);
-    } else if (dacSession) {
-      setDacAuthenticated(true);
     }
 
-    if (dsSession) setDataSourceAuthenticated(true);
-    setIsLoading(false);
+    // Auto-refresh using stored credentials
+    const refreshSession = async (type: "dac" | "datasource") => {
+      const stored = localStorage.getItem(`login_cache_${type}`);
+      if (stored) {
+        try {
+          const { username, password } = JSON.parse(stored);
+          if (username && password) {
+            console.log(`Auto-refreshing ${type} session...`);
+            const res = await fetch("/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username, password, type }),
+            });
+            const data = await res.json();
+            if (data.success && data.cookie) {
+              // Extract cookie
+              let sessionValue = "";
+              const match = data.cookie.match(/ci_session=([^;]+)/);
+              if (match && match[1]) {
+                sessionValue = match[1];
+              } else {
+                sessionValue = data.cookie;
+              }
+
+              localStorage.setItem(`${type}_session`, sessionValue);
+              if (type === "dac") setDacAuthenticated(true);
+              if (type === "datasource") setDataSourceAuthenticated(true);
+              console.log(`${type} session refreshed.`);
+            }
+          }
+        } catch (e) {
+          console.error(`Failed to auto-refresh ${type} session`, e);
+        }
+      } else {
+        // Fallback: check if session token exists (manually set or from older login)
+        // If token exists, we consider them authenticated for now, but ideally we want to refresh.
+        // If no credentials strictly required, we just check existence.
+        if (localStorage.getItem(`${type}_session`)) {
+          if (type === "dac") setDacAuthenticated(true);
+          if (type === "datasource") setDataSourceAuthenticated(true);
+        }
+      }
+    };
+
+    // Execute concurrently
+    Promise.all([refreshSession("dac"), refreshSession("datasource")]).finally(() => {
+      setIsLoading(false);
+    });
+
   }, []);
 
   // Fetch Data when authenticated
@@ -473,41 +514,34 @@ export default function Home() {
               finalNote = descInput.value || descInput.textContent || "";
             }
 
-            // Strategy 2: Fallback to "Keterangan" label search
-            if (!finalNote) {
-              const allElements = Array.from(doc.querySelectorAll("*"));
-              const labelEl = allElements.find(
-                (el) =>
-                  el.children.length === 0 &&
-                  el.textContent &&
-                  (el.textContent.trim() === "Keterangan" ||
-                    el.textContent.trim() === "Alasan Penolakan")
-              );
+            // Strategy 2
+            const alerts = Array.from(
+              doc.querySelectorAll(".alert.alert-danger")
+            );
+            const isPihakPertamaError = alerts.some((alert) =>
+              /Pihak pertama/i.test(alert.textContent || "")
+            );
 
-              if (labelEl) {
-                // Try parent's next sibling (div col-2 -> div col-10)
-                if (labelEl.parentElement) {
-                  const parentNext = labelEl.parentElement.nextElementSibling;
-                  if (parentNext) {
-                    const input = parentNext.querySelector("input, textarea");
-                    if (input)
-                      finalNote =
-                        (input as HTMLInputElement).value ||
-                        input.textContent ||
-                        "";
-                    else finalNote = parentNext.textContent?.trim() || "";
-                  }
-                }
+            if (isPihakPertamaError) {
+              const pihakPertamaNote =
+                "(1AN) Pihak pertama hanya boleh dari kepala sekolah/wakil kepala sekolah/guru/pengajar/operator sekolah";
+
+              // Gabungkan jika finalNote sudah ada isinya, jika tidak langsung set
+              if (finalNote.length > 0) {
+                // Menambahkan spasi atau baris baru sebagai pemisah
+                finalNote = `${finalNote} ${pihakPertamaNote}`;
+              } else {
+                finalNote = pihakPertamaNote;
               }
             }
+            console.log("strategy 2 alerts:", alerts, isPihakPertamaError);
 
-            // Strategy 3: Alert danger (last resort)
-            if (!finalNote) {
-              const alert = doc.querySelector(".alert.alert-danger");
-              if (alert) finalNote = alert.textContent?.trim() || "";
-            }
-
-            console.log("Parsed Rejection Note:", finalNote);
+            console.log(
+              "Parsed Rejection Note:",
+              finalNote,
+              "and status",
+              finalNote.length > 0 ? "Rejected" : "Approved"
+            );
           }
         } catch (err) {
           console.error("Error fetching view form", err);
@@ -517,33 +551,43 @@ export default function Home() {
         // status: 2 = Terima, 3 = Tolak
 
         // RE-LOGIN DAC LOGIC (Auto-Refresh Session)
-        const savedUser = localStorage.getItem('username');
-        const savedPass = localStorage.getItem('dac_password');
         let currentDacSession = localStorage.getItem("dac_session");
+        const storedDac = localStorage.getItem("login_cache_dac");
 
-        if (savedUser && savedPass) {
+        if (storedDac) {
           try {
-            // Silently refresh session
-            const loginRes = await fetch('/api/auth/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username: savedUser, password: savedPass, type: 'dac' }),
-            });
-            const loginJson = await loginRes.json();
-            if (loginJson.success && loginJson.cookie) {
-              // Extract cookie value if needed, similar to Login.tsx
-              let newSession = loginJson.cookie;
-              const match = newSession.match(/ci_session=([^;]+)/);
-              if (match && match[1]) {
-                newSession = match[1];
-              }
+            const { username: dacUser, password: dacPass } = JSON.parse(storedDac);
+            if (dacUser && dacPass) {
+              // Silently refresh session
+              const loginRes = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  username: dacUser,
+                  password: dacPass,
+                  type: "dac",
+                }),
+              });
+              const loginJson = await loginRes.json();
+              if (loginJson.success && loginJson.cookie) {
+                // Extract cookie value if needed, similar to Login.tsx
+                let newSession = loginJson.cookie;
+                const match = newSession.match(/ci_session=([^;]+)/);
+                if (match && match[1]) {
+                  newSession = match[1];
+                } else {
+                  newSession = loginJson.cookie; // Fallback
+                }
 
-              localStorage.setItem("dac_session", newSession);
-              currentDacSession = newSession;
-              console.log("DAC Session Refreshed automatically");
+                localStorage.setItem("dac_session", newSession);
+                currentDacSession = newSession;
+                console.log("DAC Session Refreshed automatically before save");
+              }
             }
           } catch (ignore) {
-            console.warn("Failed to auto-refresh DAC session, trying with existing one");
+            console.warn(
+              "Failed to auto-refresh DAC session before save, trying with existing one"
+            );
           }
         }
 
@@ -730,7 +774,7 @@ export default function Home() {
   if (!dataSourceAuthenticated) {
     return (
       <Login
-        title="Login Data Source"
+        title="Login ASSHAL.TECH"
         loginType="datasource"
         onLoginSuccess={handleDataSourceLoginSuccess}
       />
