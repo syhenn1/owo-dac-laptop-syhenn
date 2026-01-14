@@ -51,7 +51,8 @@ export const errorMap: Record<string, Record<string, string>> = {
     "Double ceklis": "(1I) Double ceklis pada halaman 1 BAPP",
     "Data BAPP sekolah tidak sesuai": "(1K) Data BAPP sekolah tidak sesuai",
     "BAPP terpotong": "(1AL) BAPP Halaman 1 terpotong",
-    "Pihak pertama bukan dari tenaga pendidik": "(1AN) Pihak pertama hanya boleh dari kepala sekolah/wakil kepala sekolah/guru/pengajar/operator sekolah"
+    "Pihak pertama bukan dari tenaga pendidik":
+      "(1AN) Pihak pertama hanya boleh dari kepala sekolah/wakil kepala sekolah/guru/pengajar/operator sekolah",
   },
   R: {
     "Ceklis tidak lengkap": "(1E) Ceklis BAPP tidak lengkap pada halaman 2",
@@ -103,9 +104,10 @@ const RadioOption = ({
     onClick={() => onChange(fieldId, option)}
     disabled={disabled}
     className={`px-3 py-1 text-xs rounded-full border transition-colors disabled:opacity-50 mb-1 mr-1
-      ${checked
-        ? "bg-blue-500 border-blue-500 text-white font-semibold"
-        : "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500"
+      ${
+        checked
+          ? "bg-blue-500 border-blue-500 text-white font-semibold"
+          : "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500"
       }`}
   >
     {option}
@@ -127,6 +129,8 @@ interface SidebarProps {
   sidebarOptions: EvaluationField[];
   position: "left" | "right";
   setPosition: (pos: "left" | "right") => void;
+  enableManualNote: boolean;
+  setEnableManualNote: (val: boolean) => void;
 }
 
 export const defaultEvaluationValues: Record<string, string> = {
@@ -161,6 +165,8 @@ export default function Sidebar({
   setSnBapp,
   position,
   setPosition,
+  enableManualNote,
+  setEnableManualNote,
 }: SidebarProps & {
   currentImageIndex: number | null;
   date?: string;
@@ -236,28 +242,28 @@ export default function Sidebar({
   return (
     <aside className="w-96 bg-gray-800 text-white flex-shrink-0 flex flex-col p-4 h-full overflow-hidden border-r border-gray-700">
       <div className="flex justify-between items-center border-b border-gray-700 pb-4 flex-shrink-0">
-        <h1 className="text-xl font-bold">
-          FORM EVALUASI
-        </h1>
+        <h1 className="text-xl font-bold">FORM EVALUASI</h1>
         {/* Layout Toggle */}
         <div className="flex items-center gap-2">
           <div className="flex bg-gray-900 p-0.5 rounded-full border border-gray-600">
             <button
               onClick={() => setPosition("left")}
-              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${position === "left"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-500 hover:text-gray-300"
-                }`}
+              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                position === "left"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-300"
+              }`}
               title="Left Layout"
             >
               L
             </button>
             <button
               onClick={() => setPosition("right")}
-              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${position === "right"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-500 hover:text-gray-300"
-                }`}
+              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                position === "right"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-300"
+              }`}
               title="Right Layout"
             >
               R
@@ -270,16 +276,22 @@ export default function Sidebar({
       {currentImageIndex !== null && (
         <div className="flex bg-gray-700 rounded p-1 mt-2 mb-2">
           <button
-            onClick={() => setFilterMode('specific')}
-            className={`flex-1 py-1 text-xs rounded font-bold transition-all ${filterMode === 'specific' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'
-              }`}
+            onClick={() => setFilterMode("specific")}
+            className={`flex-1 py-1 text-xs rounded font-bold transition-all ${
+              filterMode === "specific"
+                ? "bg-blue-600 text-white shadow"
+                : "text-gray-400 hover:text-gray-200"
+            }`}
           >
             Filtered
           </button>
           <button
-            onClick={() => setFilterMode('all')}
-            className={`flex-1 py-1 text-xs rounded font-bold transition-all ${filterMode === 'all' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'
-              }`}
+            onClick={() => setFilterMode("all")}
+            className={`flex-1 py-1 text-xs rounded font-bold transition-all ${
+              filterMode === "all"
+                ? "bg-blue-600 text-white shadow"
+                : "text-gray-400 hover:text-gray-200"
+            }`}
           >
             Default
           </button>
@@ -287,49 +299,62 @@ export default function Sidebar({
       )}
 
       {/* Date Input - Special Condition: Image Index 4 & Filtered Mode */}
-      {currentImageIndex === 4 && filterMode === 'specific' && date !== undefined && setDate && (
-        <div className="mb-4 bg-gray-700 p-2 rounded border border-gray-600">
-          <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider block mb-1">
-            Tanggal Verifikasi
-          </label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            // Wheel handler logic inline or separate helper
-            onWheel={(e) => {
-              if (!date) return;
-              const currentDate = new Date(date);
-              const daysToAdd = e.deltaY > 0 ? -1 : 1;
-              currentDate.setDate(currentDate.getDate() + daysToAdd);
-              const year = currentDate.getFullYear();
-              const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-              const day = String(currentDate.getDate()).padStart(2, "0");
-              setDate(`${year}-${month}-${day}`);
-            }}
-            className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white focus:outline-none focus:border-blue-500 text-sm"
-          />
-        </div>
-      )}
+      {currentImageIndex === 4 &&
+        filterMode === "specific" &&
+        date !== undefined &&
+        setDate && (
+          <div className="mb-4 bg-gray-700 p-2 rounded border border-gray-600">
+            <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider block mb-1">
+              Tanggal Verifikasi
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              // Wheel handler logic inline or separate helper
+              onWheel={(e) => {
+                if (!date) return;
+                const currentDate = new Date(date);
+                const daysToAdd = e.deltaY > 0 ? -1 : 1;
+                currentDate.setDate(currentDate.getDate() + daysToAdd);
+                const year = currentDate.getFullYear();
+                const month = String(currentDate.getMonth() + 1).padStart(
+                  2,
+                  "0"
+                );
+                const day = String(currentDate.getDate()).padStart(2, "0");
+                setDate(`${year}-${month}-${day}`);
+              }}
+              className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white focus:outline-none focus:border-blue-500 text-sm"
+            />
+          </div>
+        )}
 
       {/* SN BAPP Input - Special Condition: Image Index 3 & Filtered Mode */}
-      {currentImageIndex === 3 && filterMode === 'specific' && snBapp !== undefined && setSnBapp && (
-        <div className={`mb-4 bg-gray-700 p-2 rounded border border-gray-600 ${
-          // Tampilkan jika value BUKAN "Ada" dan BUKAN "Sesuai"
-          (evaluationForm['O'] !== "Ada" && evaluationForm['O'] !== "Sesuai") ? 'block' : 'hidden'
-          }`}>
-          <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider block mb-1">
-            Input SN BAPP
-          </label>
-          <input
-            type="text"
-            value={snBapp}
-            onChange={(e) => setSnBapp(e.target.value)}
-            placeholder="Input SN if mismatch"
-            className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white focus:outline-none focus:border-blue-500 text-sm font-mono placeholder-gray-500"
-          />
-        </div>
-      )}
+      {currentImageIndex === 3 &&
+        filterMode === "specific" &&
+        snBapp !== undefined &&
+        setSnBapp && (
+          <div
+            className={`mb-4 bg-gray-700 p-2 rounded border border-gray-600 ${
+              // Tampilkan jika value BUKAN "Ada" dan BUKAN "Sesuai"
+              evaluationForm["O"] !== "Ada" && evaluationForm["O"] !== "Sesuai"
+                ? "block"
+                : "hidden"
+            }`}
+          >
+            <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider block mb-1">
+              Input SN BAPP
+            </label>
+            <input
+              type="text"
+              value={snBapp}
+              onChange={(e) => setSnBapp(e.target.value)}
+              placeholder="Input SN if mismatch"
+              className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white focus:outline-none focus:border-blue-500 text-sm font-mono placeholder-gray-500"
+            />
+          </div>
+        )}
 
       <div className="flex-grow mt-4 overflow-y-auto pr-2 custom-scrollbar">
         {sidebarOptions.length === 0 ? (
@@ -365,20 +390,39 @@ export default function Sidebar({
         <p className="text-xs text-gray-400 mb-2 text-center">
           Pending: {pendingCount !== null ? pendingCount : "..."}
         </p>
+        <div className="flex items-center justify-between mb-4 bg-gray-900/50 p-2 rounded border border-gray-700">
+          <span className="text-xs font-bold text-gray-400 uppercase">
+            Edit Catatan DAC
+          </span>
+          <button
+            onClick={() => setEnableManualNote(!enableManualNote)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+              enableManualNote ? "bg-blue-600" : "bg-gray-600"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                enableManualNote ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => handleSkip(true)}
             disabled={buttonsDisabled}
-            className={`flex-1 p-3 bg-gray-500 rounded-md text-white font-bold hover:bg-gray-400 disabled:opacity-50 transition-colors ${isSubmitting ? "animate-pulse" : ""
-              }`}
+            className={`flex-1 p-3 bg-gray-500 rounded-md text-white font-bold hover:bg-gray-400 disabled:opacity-50 transition-colors ${
+              isSubmitting ? "animate-pulse" : ""
+            }`}
           >
             {isSubmitting ? <Spinner /> : "SKIP"}
           </button>
           <button
             onClick={mainButtonAction}
             disabled={buttonsDisabled}
-            className={`flex-1 p-3 rounded-md text-white font-bold disabled:opacity-50 transition-colors ${mainButtonColor} ${isSubmitting ? "animate-pulse" : ""
-              }`}
+            className={`flex-1 p-3 rounded-md text-white font-bold disabled:opacity-50 transition-colors ${mainButtonColor} ${
+              isSubmitting ? "animate-pulse" : ""
+            }`}
           >
             {isSubmitting ? <Spinner /> : mainButtonLabel}
           </button>
@@ -387,7 +431,11 @@ export default function Sidebar({
         {/* Logout Button */}
         <button
           onClick={() => {
-            if (confirm('Are you sure you want to logout? This will clear all local session data.')) {
+            if (
+              confirm(
+                "Are you sure you want to logout? This will clear all local session data."
+              )
+            ) {
               localStorage.clear();
               window.location.reload();
             }

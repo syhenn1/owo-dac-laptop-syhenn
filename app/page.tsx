@@ -54,6 +54,10 @@ export default function Home() {
   const [sidebarPosition, setSidebarPosition] = useState<"left" | "right">(
     "left"
   );
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [manualNote, setManualNote] = useState("");
+  const [enableManualNote, setEnableManualNote] = useState(false); // Default OFF
+  const [pendingApprovalData, setPendingApprovalData] = useState<any>(null);
 
   useEffect(() => {
     const storedPos = localStorage.getItem("sidebar_layout");
@@ -155,6 +159,7 @@ export default function Home() {
         setEvaluationForm(defaultEvaluationValues); // Removed constant default
         // Logic to reset form based on current options will be handled in useEffect or Sidebar
         setCustomReason("");
+        setEnableManualNote(false);
       } else {
         setSelectedSn(null);
         setParsedData(null);
@@ -582,7 +587,6 @@ export default function Home() {
                 finalNote = pihakPertamaNote;
               }
             }
-            console.log("strategy 2 alerts:", alerts, isPihakPertamaError);
 
             console.log(
               "Parsed Rejection Note:",
@@ -641,29 +645,29 @@ export default function Home() {
         }
 
         if (currentDacSession && parsedData.extractedId) {
-          try {
-            await fetch("/api/save-approval", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                status: finalNote.length > 0 ? 3 : 2,
-                id: parsedData.extractedId,
-                npsn: parsedData.school.npsn,
-                resi: parsedData.resi,
-                note: finalNote,
-                session_id: currentDacSession,
-              }),
-            });
-            console.log("Saved to DAC");
-          } catch (dacErr) {
-            console.error("Failed to save to DAC", dacErr);
-            alert(
-              "Gagal menyimpan status ke DAC (Approval Data Source sukses)"
-            );
+          // Di dalam submitToDataSource setelah finalNote didapatkan:
+          console.log("Parsed Rejection Note:", finalNote);
+
+          const approvalPayload = {
+            status: finalNote.length > 0 ? 3 : 2,
+            id: parsedData.extractedId,
+            npsn: parsedData.school.npsn,
+            resi: parsedData.resi,
+            note: finalNote,
+            session_id: currentDacSession,
+          };
+
+          if (enableManualNote) {
+            // INTERUPSI: Simpan data dan tampilkan Modal
+            setPendingApprovalData(approvalPayload);
+            setManualNote(finalNote); // Isi textarea modal dengan alasan otomatis
+            setShowNoteModal(true);
+          } else {
+            // FLOW LAMA: Langsung jalankan
+            await executeSaveApproval(approvalPayload);
+            handleSkip(false);
           }
         }
-
-        handleSkip(false);
       } else {
         console.error("Submit failed", json.message);
         alert(`Gagal submit: ${json.message}`);
@@ -675,7 +679,34 @@ export default function Home() {
       setIsSubmitting(false);
     }
   };
+  const executeSaveApproval = async (payload: any) => {
+    try {
+      const res = await fetch("/api/save-approval", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      console.log("Saved to DAC");
+      return await res.json();
+    } catch (dacErr) {
+      console.error("Failed to save to DAC", dacErr);
+      alert("Gagal menyimpan ke DAC");
+    }
+  };
 
+  const handleConfirmManualNote = async () => {
+    if (!pendingApprovalData) return;
+
+    const updatedPayload = {
+      ...pendingApprovalData,
+      note: manualNote, // Gunakan catatan yang sudah diedit user
+    };
+
+    await executeSaveApproval(updatedPayload);
+    setShowNoteModal(false);
+    setPendingApprovalData(null);
+    handleSkip(false); // Pindah ke task berikutnya setelah sukses
+  };
   // Effect untuk mengecek Double Data (NPSN Ganda)
   useEffect(() => {
     const checkDoubleData = async () => {
@@ -1009,6 +1040,8 @@ export default function Home() {
           setSnBapp={setSnBapp}
           position={sidebarPosition}
           setPosition={handleSetSidebarPosition}
+          enableManualNote={enableManualNote}
+          setEnableManualNote={setEnableManualNote}
         />
       </div>
 
@@ -1111,6 +1144,55 @@ export default function Home() {
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 px-4 py-2 rounded-full text-white font-medium backdrop-blur-md">
               {parsedData.images[currentImageIndex].title} (
               {currentImageIndex + 1} / {parsedData.images.length})
+            </div>
+          </div>
+        </div>
+      )}
+      {showNoteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-zinc-900 border border-zinc-700 w-full max-w-lg rounded-xl shadow-2xl overflow-hidden">
+            <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+              <h3 className="text-white font-bold">
+                Edit Catatan Approval DAC
+              </h3>
+              <span
+                className={`px-2 py-1 rounded text-[10px] font-bold ${
+                  pendingApprovalData?.status === 2
+                    ? "bg-green-900 text-green-400"
+                    : "bg-red-900 text-red-400"
+                }`}
+              >
+                {pendingApprovalData?.status === 2 ? "APPROVE" : "REJECT"}
+              </span>
+            </div>
+            <div className="p-4">
+              <label className="text-xs text-zinc-500 mb-2 block uppercase font-bold tracking-tighter">
+                Catatan (Preview dari Source):
+              </label>
+              <textarea
+                value={manualNote}
+                onChange={(e) => setManualNote(e.target.value)}
+                className="w-full h-48 bg-black border border-zinc-700 rounded p-3 text-sm text-zinc-200 focus:border-blue-500 outline-none font-mono"
+                placeholder="Tambahkan catatan tambahan di sini..."
+              />
+            </div>
+            <div className="p-4 bg-zinc-800/50 flex gap-2">
+              <button
+                onClick={() => {
+                  executeSaveApproval(pendingApprovalData);
+                  setShowNoteModal(false);
+                  handleSkip(false);
+                }}
+                className="flex-1 py-2 text-zinc-400 hover:text-white transition-colors text-sm"
+              >
+                Lewati Edit
+              </button>
+              <button
+                onClick={handleConfirmManualNote}
+                className="flex-2 px-8 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold text-sm transition-colors"
+              >
+                SIMPAN KE DAC
+              </button>
             </div>
           </div>
         </div>
