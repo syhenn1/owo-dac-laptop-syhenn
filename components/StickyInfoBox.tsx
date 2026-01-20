@@ -4,11 +4,13 @@ import { useDraggable } from "./hooks/useDraggable";
 interface StickyInfoBoxProps {
   schoolData: Record<string, string>;
   itemData: Record<string, string>;
+  history: any[];
 }
 
 export default function StickyInfoBox({
   schoolData,
   itemData,
+  history,
 }: StickyInfoBoxProps) {
   const boxRef = useRef<HTMLDivElement>(null!);
   const { position, handleMouseDown } = useDraggable<HTMLDivElement>(
@@ -52,14 +54,9 @@ export default function StickyInfoBox({
           flexShrink: 0,
         }}
       >
-        <span className="font-bold text-white text-sm">
-          Data Sekolah & Barang
+        <span className="font-bold text-yellow-500 text-sm">
+          {schoolData.nama_sekolah || "-"}
         </span>
-        {/* <div className="flex gap-1">
-          <div className="w-2 h-2 rounded-full bg-red-500"></div>
-          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-        </div> */}
       </div>
 
       {/* Content */}
@@ -68,13 +65,7 @@ export default function StickyInfoBox({
         onClick={(e) => e.stopPropagation()}
       >
         {/* School Info */}
-        <div className="space-y-1">
-          <div
-            className="font-bold text-blue-400 truncate"
-            title={schoolData.nama_sekolah}
-          >
-            {schoolData.nama_sekolah || "-"}
-          </div>
+        <div className="">
           <div>
             <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
               NPSN
@@ -82,6 +73,12 @@ export default function StickyInfoBox({
             <div className="text-lg font-mono text-yellow-500">
               {schoolData.npsn || "-"}
             </div>
+          </div>
+          <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+            Serial Number
+          </div>
+          <div className="text-lg font-mono text-yellow-500">
+            {itemData.serial_number || "-"}
           </div>
           <div>
             <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
@@ -104,7 +101,7 @@ export default function StickyInfoBox({
         <hr className="border-zinc-700" />
 
         {/* Item Info */}
-        <div className="space-y-1">
+        <div className="">
           <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             Barang
           </div>
@@ -114,12 +111,56 @@ export default function StickyInfoBox({
           >
             {itemData.nama_barang || "-"}
           </div>
-          <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-            Serial Number
+        </div>
+
+        <hr className="border-zinc-700" />
+
+        {/* History Info */}
+        <div className="">
+          <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+            Riwayat Approval
           </div>
-          <div className="text-lg font-mono text-yellow-500">
-            {itemData.serial_number || "-"}
-          </div>
+          {history && history.length > 0 ? (
+            <div className="space-y-3">
+              {history.map((log: any, idx: number) => (
+                <div
+                  key={idx}
+                  className={`border border-zinc-700 rounded p-2 ${log.status.toLowerCase().includes("setuju") ||
+                    log.status.toLowerCase().includes("terima")
+                    ? "bg-green-900/20 border-green-900/50"
+                    : "bg-red-900/20 border-red-900/50"
+                    }`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-[10px] text-zinc-500 font-mono">
+                      {log.date}
+                    </span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${log.status.toLowerCase().includes("setuju") ||
+                        log.status.toLowerCase().includes("terima")
+                        ? "bg-green-900/50 text-green-400"
+                        : "bg-red-900/50 text-red-400"
+                        }`}
+                    >
+                      {log.status}
+                    </span>
+                  </div>
+                  {log.user && (
+                    <div className="text-xs font-semibold text-zinc-300 mb-0.5">
+                      {log.user}
+                    </div>
+                  )}
+                  <div className="text-xs text-zinc-400 italic">
+                    {log.note}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-xs text-zinc-600 italic">
+              Belum ada riwayat.
+            </div>
+          )}
         </div>
 
       </div>
