@@ -202,13 +202,11 @@ export default function Home() {
       const json = await res.json();
       if (json.success) {
         // Sort by Date (optional) or just use as is
-        const sorted = json.data.sort((a: any, b: any) => {
-          // Assuming newer tasks should be first or last?
-          // Let's keep original order for now unless specified
-          return 0;
-        });
-        // setSheetData(sorted.reverse().slice(1,21)); // Reverse to have oldest first
-        setSheetData(sorted); 
+        const filtered = json.data.filter((item: any) => item.type === "DAC");
+        if (typeof window !== "undefined" && window.location.search.includes("reverse=true")) {
+          filtered.reverse();
+        }
+        setSheetData(filtered); 
         setCurrentTaskIndex(0);
       } else {
         console.error("Failed to fetch scraped data:", json.message);
