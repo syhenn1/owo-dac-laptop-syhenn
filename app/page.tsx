@@ -180,6 +180,15 @@ export default function Home() {
           const result = await fetchItemFromApi(nextItem, session);
           if (result) {
             setPrefetchedData(result);
+
+            // Explicit Image Preloading
+            if (result.images && result.images.length > 0) {
+              console.log(`Preloading ${result.images.length} images...`);
+              result.images.forEach((img) => {
+                const i = new Image();
+                i.src = img.src;
+              });
+            }
           }
         } catch (e) {
           console.warn("Prefetch failed", e);
@@ -188,7 +197,7 @@ export default function Home() {
     };
 
     // Delay prefetch slightly to prioritize current render
-    const timer = setTimeout(prefetchNext, 1000);
+    const timer = setTimeout(prefetchNext, 200);
     return () => clearTimeout(timer);
   }, [currentTaskIndex, sheetData, prefetchedData]);
 
@@ -271,14 +280,13 @@ export default function Home() {
   const handleSelectItem = async (item: any) => {
     // Debounce UI
     setIsTransientDisabled(true);
-    setTimeout(() => setIsTransientDisabled(false), 800); // 800ms safety lock
+    setTimeout(() => setIsTransientDisabled(false), 100); // 100ms safety lock
 
     setSelectedSn(item.serial_number);
     setDetailLoading(true);
     setRawDataHtml("");
-    // setParsedData(null); // Don't clear immediately if we can help it, but for cleanliness maybe yes?
-    // actually lets try to keep old data visible or show loading? 
-    // Existing behavior was clear triggers loading spinner.
+    // Clear previous data immediately to prevent "ghost" images from previous item
+    setParsedData(null);
 
     // Check Prefetch
     if (prefetchedData && prefetchedData.item.serial_number === item.serial_number) {
@@ -470,7 +478,9 @@ export default function Home() {
     // Only optimistic if we don't need manual intervention (Modal)
     const isOptimistic = !enableManualNote;
 
-    setIsSubmitting(true);
+    if (!isOptimistic) {
+      setIsSubmitting(true);
+    }
 
     if (isOptimistic) {
       // Optimistically move to next item
