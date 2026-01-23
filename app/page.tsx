@@ -203,10 +203,14 @@ export default function Home() {
       if (json.success) {
         // Sort by Date (optional) or just use as is
         const filtered = json.data.filter((item: any) => item.type === "DAC" && item.status === "PROSES");
-        if (typeof window !== "undefined" && window.location.search.includes("reverse=true")) {
+
+        if (
+          typeof window !== "undefined" &&
+          window.location.search.includes("reverse=true")
+        ) {
           filtered.reverse();
         }
-        setSheetData(filtered); 
+        setSheetData(filtered);
         setCurrentTaskIndex(0);
       } else {
         console.error("Failed to fetch scraped data:", json.message);
@@ -510,7 +514,7 @@ export default function Home() {
         id_user: id,
         npsn: currentItem.npsn, // Use scrape data preferably
         sn_penyedia: currentItem.serial_number,
-        cek_sn_penyedia: "0",
+        cek_sn_penyedia: currentItem.cek_sn_penyedia,
         id_update: currentItem.action_id, // action_id is id_update
         no_bapp: currentItem.bapp, // bapp from scrape is no_bapp
         ket_tgl_bapp: evaluationForm["F"],
@@ -736,8 +740,8 @@ export default function Home() {
 
             alert(
               `⚠️ PERINGATAN: Terdeteksi ${json.data.length} data untuk NPSN: ${parsedData.school.npsn}.\n\n` +
-                `Daftar SN yang terdaftar:\n${snList}\n\n` +
-                `Harap teliti kembali sebelum melakukan approval.`,
+              `Daftar SN yang terdaftar:\n${snList}\n\n` +
+              `Harap teliti kembali sebelum melakukan approval.`,
             );
           }
         }
@@ -864,9 +868,8 @@ export default function Home() {
     <div className="flex h-screen w-full bg-zinc-50 dark:bg-black overflow-hidden relative">
       {/* Main Content */}
       <div
-        className={`flex-1 h-full overflow-hidden relative bg-zinc-50/50 dark:bg-zinc-900/50 ${
-          sidebarPosition === "left" ? "order-2" : "order-1"
-        }`}
+        className={`flex-1 h-full overflow-hidden relative bg-zinc-50/50 dark:bg-zinc-900/50 ${sidebarPosition === "left" ? "order-2" : "order-1"
+          }`}
       >
         <div className="h-full overflow-y-auto p-4 md:p-6 custom-scrollbar">
           {parsedData && !detailLoading ? (
@@ -929,24 +932,22 @@ export default function Home() {
                     {parsedData.history.map((log, idx) => (
                       <div
                         key={idx}
-                        className={`border dark:border-zinc-700 rounded-lg p-4 dark:bg-zinc-900/30 ${
-                          log.status.toLowerCase().includes("setuju") ||
+                        className={`border dark:border-zinc-700 rounded-lg p-4 dark:bg-zinc-900/30 ${log.status.toLowerCase().includes("setuju") ||
                           log.status.toLowerCase().includes("terima")
-                            ? "bg-green-100"
-                            : "bg-red-100"
-                        }`}
+                          ? "bg-green-100"
+                          : "bg-red-100"
+                          }`}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <span className="text-xs text-zinc-500 font-mono">
                             {log.date}
                           </span>
                           <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                              log.status.toLowerCase().includes("setuju") ||
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${log.status.toLowerCase().includes("setuju") ||
                               log.status.toLowerCase().includes("terima")
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                            }`}
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                              }`}
                           >
                             {log.status}
                           </span>
@@ -1015,11 +1016,10 @@ export default function Home() {
 
       {/* Sidebar */}
       <div
-        className={`flex-shrink-0 h-full ${
-          sidebarPosition === "left"
-            ? "order-1 border-r border-zinc-700"
-            : "order-2 border-l border-zinc-700"
-        }`}
+        className={`flex-shrink-0 h-full ${sidebarPosition === "left"
+          ? "order-1 border-r border-zinc-700"
+          : "order-2 border-l border-zinc-700"
+          }`}
       >
         <Sidebar
           pendingCount={sheetData.length - currentTaskIndex}
@@ -1054,9 +1054,8 @@ export default function Home() {
           />
 
           <div
-            className={`absolute top-0 bottom-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm transition-all duration-300 ${
-              sidebarPosition === "left" ? "left-96 right-0" : "left-0 right-96"
-            }`}
+            className={`absolute top-0 bottom-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm transition-all duration-300 ${sidebarPosition === "left" ? "left-96 right-0" : "left-0 right-96"
+              }`}
             onClick={() => setCurrentImageIndex(null)}
           >
             {/* Sticky Info */}
@@ -1121,7 +1120,7 @@ export default function Home() {
                 e.stopPropagation();
                 setCurrentImageIndex(
                   (currentImageIndex - 1 + parsedData.images.length) %
-                    parsedData.images.length,
+                  parsedData.images.length,
                 );
               }}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white text-6xl transition-colors p-4"
@@ -1156,11 +1155,10 @@ export default function Home() {
                 Edit Catatan Approval DAC
               </h3>
               <span
-                className={`px-2 py-1 rounded text-[10px] font-bold ${
-                  pendingApprovalData?.status === 2
-                    ? "bg-green-900 text-green-400"
-                    : "bg-red-900 text-red-400"
-                }`}
+                className={`px-2 py-1 rounded text-[10px] font-bold ${pendingApprovalData?.status === 2
+                  ? "bg-green-900 text-green-400"
+                  : "bg-red-900 text-red-400"
+                  }`}
               >
                 {pendingApprovalData?.status === 2 ? "APPROVE" : "REJECT"}
               </span>
